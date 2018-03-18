@@ -10,10 +10,77 @@
 </head>
 <body>
 
+    <div id="J_iAddress"></div>
 
-    
+
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
 <script>
+    // 1   将json数据渲染为dom结构
+    // 2   给select绑定事件处理程序
+    // 3   事件被触发时，执行回调，将选择的结果传递给回调
+    var init, render, createDom, getJsonFromData, $iAddress;
+
+    $iAddress = $('#J_iAddress');
+
+    render = function(data){
+        var html = `<select name="" id="">`;
+            
+            
+        html += data.map(function(item, index){
+            return `<option value="${item.code}">${item.name}</option>`;
+        }).join('');
+
+        html += `</select>`;
+
+        return html;
+    };
+    getJsonFromData = function(data, code){
+        for(var i = 0; i < data.length; i++){      
+            if(data[i].code === code){
+                var result = data[i].children;
+                return result;
+            }else{
+                if(data[i].children){
+                   var res = getJsonFromData(data[i].children, code);
+                   if(res){
+                       return res;
+                   }
+                }
+            }
+        }
+
+    };
+
+    createDom = function(data){
+
+        // 生成省份
+        $iAddress.append(render(data));
+
+        $iAddress.on('change', 'select', function(e){
+            var code = e.target.value;
+            
+            var result = getJsonFromData(data, code);
+            if(result){
+                $iAddress.append(render(result));
+            }
+        });
+
+    };
+
+    init = function(){
+        $.getJSON('./pcas-code.json')
+            .then(function(data){
+                if(data && data.length){
+                    createDom(data);
+                }
+            }, function(error){
+                
+            });
+    };
+
+    init();
+
+
 </script>
 </body>
 </html>
