@@ -37,8 +37,7 @@
     getJsonFromData = function(data, code){
         for(var i = 0; i < data.length; i++){      
             if(data[i].code === code){
-                var result = data[i].children;
-                return result;
+                return data[i].children;
             }else{
                 if(data[i].children){
                    var res = getJsonFromData(data[i].children, code);
@@ -48,7 +47,6 @@
                 }
             }
         }
-
     };
 
     createDom = function(data){
