@@ -12,28 +12,33 @@
 
     <div id="J_iAddress"></div>
 
+    
 
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
 <script>
+
     // 1   将json数据渲染为dom结构
     // 2   给select绑定事件处理程序
     // 3   事件被触发时，执行回调，将选择的结果传递给回调
-    var init, render, createDom, getJsonFromData, $iAddress;
+    var level = 0, init, render, createDom, getJsonFromData,
+        clearOldSelect,
+        $iAddress;
 
     $iAddress = $('#J_iAddress');
 
     render = function(data){
-        var html = `<select name="" id="">`;
-            
+        level++;
+        var html = `<select data-level="${level}"><option value="">请选择</option>`;
             
         html += data.map(function(item, index){
-            return `<option value="${item.code}">${item.name}</option>`;
+            return `<option value="${ item.code }">${ item.name }</option>`;
         }).join('');
 
         html += `</select>`;
 
         return html;
     };
+
     getJsonFromData = function(data, code){
         for(var i = 0; i < data.length; i++){      
             if(data[i].code === code){
@@ -49,35 +54,52 @@
         }
     };
 
-    createDom = function(data){
-
-        // 生成省份
-        $iAddress.append(render(data));
-
-        $iAddress.on('change', 'select', function(e){
-            var code = e.target.value;
-            
-            var result = getJsonFromData(data, code);
-            if(result){
-                $iAddress.append(render(result));
+    // level参数是当前触发select元素的等级
+    clearOldSelect = function(_level){
+        $('select').each((index, item) => {
+            if($(item).attr('data-level') > _level){
+                $(item).remove();
             }
         });
 
+        level = _level;
     };
 
-    init = function(){
-        $.getJSON('./pcas-code.json')
-            .then(function(data){
-                if(data && data.length){
-                    createDom(data);
-                }
-            }, function(error){
-                
-            });
+    init = function(data){
+
+        // 生成省份
+        $iAddress.append(render(data));
+        
+        $iAddress.on('change', 'select', function(e){
+            var code = e.target.value;
+            var _level = parseInt(e.target.getAttribute('data-level'));
+            
+            console.log(level, _level, code);
+            if(_level < level){
+                clearOldSelect(_level);
+            }
+
+            if(!code || !data || !data.length){return;}
+
+            // 这里还需要做一下判断，当选择的下级有了之后，就应该清除之前选的
+
+            // 怎么判断呢？
+            //     每次生成一个select就给他加一个层级，然后每次生成前就在事件处理程序中读取当前select
+            // 的层级，如果层级有问题就remove掉
+            
+            var result = getJsonFromData(data, code);
+            if(!result){return;}
+            $iAddress.append(render(result));
+        });
     };
 
-    init();
-
+    $.getJSON('./pcas-code.json').then(function(data){
+        if(data && data.length){
+            init(data);
+        }
+    }, function(error){
+        alert('地址数据异常');
+    });
 
 </script>
 </body>
