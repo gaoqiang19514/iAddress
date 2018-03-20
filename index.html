@@ -21,8 +21,11 @@
     // 2   给select绑定事件处理程序
     // 3   事件被触发时，执行回调，将选择的结果传递给回调
     var level = 0, init, render, createDom, getJsonFromData,
-        clearOldSelect,
+        clearAfterSelect,
         $iAddress;
+    
+    var cacheData = null;
+    var count = 0;
 
     $iAddress = $('#J_iAddress');
 
@@ -39,7 +42,10 @@
         return html;
     };
 
+    // 做优化
+        // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
     getJsonFromData = function(data, code){
+        count++;
         for(var i = 0; i < data.length; i++){      
             if(data[i].code === code){
                 return data[i].children;
@@ -55,7 +61,7 @@
     };
 
     // level参数是当前触发select元素的等级
-    clearOldSelect = function(_level){
+    clearAfterSelect = function(_level){
         $('select').each((index, item) => {
             if($(item).attr('data-level') > _level){
                 $(item).remove();
@@ -69,13 +75,13 @@
 
         // 生成省份
         $iAddress.append(render(data));
-        
+
         $iAddress.on('change', 'select', function(e){
             var code = e.target.value;
             var _level = parseInt(e.target.getAttribute('data-level'));
             
             if(_level < level){
-                clearOldSelect(_level);
+                clearAfterSelect(_level);
             }
 
             if(!code || !data || !data.length){return;}
@@ -85,8 +91,23 @@
             // 怎么判断呢？
             //     每次生成一个select就给他加一个层级，然后每次生成前就在事件处理程序中读取当前select
             // 的层级，如果层级有问题就remove掉
+
+            // 是否可以利用这个层级变量来优化查找？
+            //     如果当前的level是2，那么就应该在市里面去遍历
+            //     如果当前的level是3，那么就应该是区域里面去遍历
             
-            var result = getJsonFromData(data, code);
+            //     应该是在当前code的子元素里面去遍历
+
+            // 难道只能做缓存，比如当前选了一个湖北省，那就把湖北省的子元素都缓存起来
+            // 下一次选的项目是湖北省的子元素的话，就在这个缓存里面去搜索，这样速度会快些
+            
+            var result = null;
+            if(cacheData && (_level > 1)){
+                result = getJsonFromData(cacheData, code);
+            }else{
+                // 这里只缓存了选择的市列表 还可以继续优化，让每次选择只从子元素中找，不用找同级
+                result = cacheData = getJsonFromData(data, code);
+            }
             if(!result){return;}
             $iAddress.append(render(result));
         });
