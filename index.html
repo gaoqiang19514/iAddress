@@ -81,6 +81,7 @@
             var _level = parseInt(e.target.getAttribute('data-level'));
             
             if(_level < level){
+                cacheData = data;
                 clearAfterSelect(_level);
             }
 
@@ -102,14 +103,19 @@
             // 下一次选的项目是湖北省的子元素的话，就在这个缓存里面去搜索，这样速度会快些
             
             var result = null;
-            if(cacheData && (_level > 1)){
-                result = getJsonFromData(cacheData, code);
+            if(cacheData){
+                result = cacheData = getJsonFromData(cacheData, code);
             }else{
                 // 这里只缓存了选择的市列表 还可以继续优化，让每次选择只从子元素中找，不用找同级
+                    // 根据当前选择的 缓存直接下级
+                        // 比如选择了省就缓存市 选了市就缓存区 选择了区就缓存街道
                 result = cacheData = getJsonFromData(data, code);
             }
             if(!result){return;}
             $iAddress.append(render(result));
+            
+
+            console.log(count);
         });
     };
 
