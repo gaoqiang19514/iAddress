@@ -42,15 +42,20 @@
 
     // 做优化
         // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
+    // 2 4 6 9
+    var levelSchema = [];
+
+
+
     getJsonFromData = function(data, code){
 
-        怎么利用这个level变量呢？ 遇到直接跳过 会不会直接跳出了递归？
+        // 怎么利用这个level变量呢？ 遇到直接跳过 会不会直接跳出了递归？
         if(arguments[2]){
             console.log(arguments[2]);
         }
 
         count++;
-        for(var i = 0; i < data.length; i++){      
+        for(var i = 0; i < data.length; i++){  
             if(data[i].code === code){
                 return data[i].children;
             }else{
@@ -122,6 +127,8 @@
     $.getJSON('./pcas-code.json').then(function(data){
         if(data && data.length){
             init(data);
+            console.log(data);
+            
         }
     }, function(error){
         alert('地址数据异常');
