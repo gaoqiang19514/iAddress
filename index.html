@@ -12,8 +12,6 @@
 
     <div id="J_iAddress"></div>
 
-    
-
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
 <script>
 
@@ -45,6 +43,12 @@
     // 做优化
         // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
     getJsonFromData = function(data, code){
+
+        怎么利用这个level变量呢？ 遇到直接跳过 会不会直接跳出了递归？
+        if(arguments[2]){
+            console.log(arguments[2]);
+        }
+
         count++;
         for(var i = 0; i < data.length; i++){      
             if(data[i].code === code){
@@ -70,7 +74,7 @@
 
         level = _level;
     };
-
+    
     init = function(data){
 
         // 生成省份
@@ -81,41 +85,37 @@
             var _level = parseInt(e.target.getAttribute('data-level'));
             
             if(_level < level){
+                // 只要要发生了反选择，cacheData就会被重置为省级，
+                // 应该被重置为当前级别才有缓存的作用啊
+                    // 1 每次缓存当前同级元素 效果： 但是后退两级重选的话，还是会检索不到数据
+                    // 2 选择哪个深度的就去全局data里面根据传入的深度检索数据 效果： 但是如果如果数据很深还是要遍历很多次
+                    // 3 当前选了湖北省，就把湖北省的直接子元素缓存起来，选了随州市，就把随州市的直接子元素缓存起来
+                        // 再次切换省份，缓存无效，这种优化只能保证用户会一级一级选下去的情况有用
+                    // 4 组合两种优化方式
+                    //     1 只遍历用户选择元素的级别
+                    //         正序 用户选了武汉市，就根据遍历武汉市的直接子元素
+                    //         逆序 用户选了武汉市，但是接下来又选了湖南省，这样就应该去省份级别去遍历
+                            // 2 递归的时候，传入一个层级，根据层级遍历，但是进入层级也是需要遍历的啊
+                            // 3 每次只遍历一个省份？那市呢？ 让递归只对一个循环下的元素进行遍历 目前的递归会对每个省进行遍历
                 cacheData = data;
                 clearAfterSelect(_level);
             }
 
             if(!code || !data || !data.length){return;}
 
-            // 这里还需要做一下判断，当选择的下级有了之后，就应该清除之前选的
 
-            // 怎么判断呢？
-            //     每次生成一个select就给他加一个层级，然后每次生成前就在事件处理程序中读取当前select
-            // 的层级，如果层级有问题就remove掉
-
-            // 是否可以利用这个层级变量来优化查找？
-            //     如果当前的level是2，那么就应该在市里面去遍历
-            //     如果当前的level是3，那么就应该是区域里面去遍历
-            
-            //     应该是在当前code的子元素里面去遍历
-
-            // 难道只能做缓存，比如当前选了一个湖北省，那就把湖北省的子元素都缓存起来
-            // 下一次选的项目是湖北省的子元素的话，就在这个缓存里面去搜索，这样速度会快些
-            
             var result = null;
+
             if(cacheData){
-                result = cacheData = getJsonFromData(cacheData, code);
+                result = cacheData = getJsonFromData(cacheData, code, _level);
             }else{
-                // 这里只缓存了选择的市列表 还可以继续优化，让每次选择只从子元素中找，不用找同级
-                    // 根据当前选择的 缓存直接下级
-                        // 比如选择了省就缓存市 选了市就缓存区 选择了区就缓存街道
-                result = cacheData = getJsonFromData(data, code);
+                result = cacheData = getJsonFromData(data, code, _level);
             }
+            
             if(!result){return;}
             $iAddress.append(render(result));
-            
 
-            console.log(count);
+            // console.log(count);
         });
     };
 
