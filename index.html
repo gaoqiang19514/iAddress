@@ -45,20 +45,17 @@
     // 2 4 6 9
     var levelSchema = [];
 
-
+    var phase = 0;
 
     getJsonFromData = function(data, code){
-
-        // 怎么利用这个level变量呢？ 遇到直接跳过 会不会直接跳出了递归？
-        if(arguments[2]){
-            console.log(arguments[2]);
-        }
-
-        count++;
         for(var i = 0; i < data.length; i++){  
+            
             if(data[i].code === code){
                 return data[i].children;
             }else{
+                // 这里可以跳过对无用深度的遍历？
+                    // 条件1 要找的层级 console.log(arguments[2]);
+                    // 条件2 当前遍历的数据层级
                 if(data[i].children){
                    var res = getJsonFromData(data[i].children, code);
                    if(res){
@@ -108,7 +105,6 @@
 
             if(!code || !data || !data.length){return;}
 
-
             var result = null;
 
             if(cacheData){
@@ -120,14 +116,14 @@
             if(!result){return;}
             $iAddress.append(render(result));
 
-            console.log(count);
+            // console.log(count);
         });
     };
 
     $.getJSON('./pcas-code.json').then(function(data){
         if(data && data.length){
             init(data);
-            console.log(data);
+            // console.log(data);
             
         }
     }, function(error){
