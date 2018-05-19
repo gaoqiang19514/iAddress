@@ -12,6 +12,12 @@
             width: 500px;
             border: 1px solid #eaeaea;
         }
+        .view{
+            display: none;
+        }
+        .view.active{
+            display: block;
+        }
         .item{
             cursor: pointer;
             text-indent: 1em;
@@ -37,7 +43,7 @@
 
     
     <div id="J_address" class="container">
-        <div class="list">
+        <div class="view province active">
             <div class="item">湖北省</div>
             <div class="item">湖南省</div>
             <div class="item">四川省</div>
@@ -45,21 +51,43 @@
             <div class="item">广东省</div>
             <div class="item">广西省</div>
         </div>
+        <div class="view city">
+            <div class="item">湖北市</div>
+            <div class="item">湖南市</div>
+            <div class="item">四川市</div>
+            <div class="item">江西市</div>
+            <div class="item">广东市</div>
+            <div class="item">广西市</div>
+        </div>
+        <div class="view district">
+            <div class="item">湖北区</div>
+            <div class="item">湖南区</div>
+            <div class="item">四川区</div>
+            <div class="item">江西区</div>
+            <div class="item">广东区</div>
+            <div class="item">广西区</div>
+        </div>
     </div>
 
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
 <script>
 
+    var $views = $('.view');
 
+    var level = 0;
     $('#J_address').on('click', '.item', function(e){
-        var $item = $(this);
+        level++;
         
+        var $item = $(this);
         $item.addClass('moveout');
         $item.on('transitionend', function(){
             var $this = $(this);
             $this.off('transitionend');
             $this.remove();
+
+            $views.removeClass('active').eq(level).addClass('active');
         });
+
     });
 
 
@@ -81,107 +109,107 @@
     // 1   将json数据渲染为dom结构
     // 2   给select绑定事件处理程序
     // 3   事件被触发时，执行回调，将选择的结果传递给回调
-    var level = 0, init, render, createDom, getJsonFromData,
-        clearAfterSelect,
-        $iAddress;
+    // var level = 0, init, render, createDom, getJsonFromData,
+    //     clearAfterSelect,
+    //     $iAddress;
     
-    var cacheData = null;
-    var count = 0;
+    // var cacheData = null;
+    // var count = 0;
 
-    $iAddress = $('#J_iAddress');
+    // $iAddress = $('#J_iAddress');
 
-    render = function(data){
-        level++;
-        var html = `<select data-level="${level}"><option value="">请选择</option>`;
+    // render = function(data){
+    //     level++;
+    //     var html = `<select data-level="${level}"><option value="">请选择</option>`;
             
-        html += data.map(function(item, index){
-            return `<option value="${ item.code }">${ item.name }</option>`;
-        }).join('');
+    //     html += data.map(function(item, index){
+    //         return `<option value="${ item.code }">${ item.name }</option>`;
+    //     }).join('');
 
-        html += `</select>`;
+    //     html += `</select>`;
 
-        return html;
-    };
+    //     return html;
+    // };
 
-    // 做优化
-        // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
-    // 2 4 6 9
-    var levelSchema = [];
+    // // 做优化
+    //     // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
+    // // 2 4 6 9
+    // var levelSchema = [];
 
-    var phase = 0;
+    // var phase = 0;
 
-    getJsonFromData = function(data, code){
-        for(var i = 0; i < data.length; i++){  
+    // getJsonFromData = function(data, code){
+    //     for(var i = 0; i < data.length; i++){  
             
-            if(data[i].code === code){
-                return data[i].children;
-            }else{
-                // 这里可以跳过对无用深度的遍历？
-                    // 条件1 要找的层级 console.log(arguments[2]);
-                    // 条件2 当前遍历的数据层级
-                if(data[i].children){
-                   var res = getJsonFromData(data[i].children, code);
-                   if(res){
-                       return res;
-                   }
-                }
-            }
-        }
-    };
+    //         if(data[i].code === code){
+    //             return data[i].children;
+    //         }else{
+    //             // 这里可以跳过对无用深度的遍历？
+    //                 // 条件1 要找的层级 console.log(arguments[2]);
+    //                 // 条件2 当前遍历的数据层级
+    //             if(data[i].children){
+    //                var res = getJsonFromData(data[i].children, code);
+    //                if(res){
+    //                    return res;
+    //                }
+    //             }
+    //         }
+    //     }
+    // };
 
-    // level参数是当前触发select元素的等级
-    clearAfterSelect = function(_level){
-        $('select').each((index, item) => {
-            if($(item).attr('data-level') > _level){
-                $(item).remove();
-            }
-        });
+    // // level参数是当前触发select元素的等级
+    // clearAfterSelect = function(_level){
+    //     $('select').each((index, item) => {
+    //         if($(item).attr('data-level') > _level){
+    //             $(item).remove();
+    //         }
+    //     });
 
-        level = _level;
-    };
+    //     level = _level;
+    // };
     
-    init = function(data){
+    // init = function(data){
 
-        // 生成省份
-        $iAddress.append(render(data));
+    //     // 生成省份
+    //     $iAddress.append(render(data));
 
-        $iAddress.on('change', 'select', function(e){
-            var code = e.target.value;
-            var _level = parseInt(e.target.getAttribute('data-level'));
+    //     $iAddress.on('change', 'select', function(e){
+    //         var code = e.target.value;
+    //         var _level = parseInt(e.target.getAttribute('data-level'));
             
-            if(_level < level){
-                // 只要要发生了反选择，cacheData就会被重置为省级，
-                // 应该被重置为当前级别才有缓存的作用啊
-                    // 1 每次缓存当前同级元素 效果： 但是后退两级重选的话，还是会检索不到数据
-                    // 2 选择哪个深度的就去全局data里面根据传入的深度检索数据 效果： 但是如果如果数据很深还是要遍历很多次
-                    // 3 当前选了湖北省，就把湖北省的直接子元素缓存起来，选了随州市，就把随州市的直接子元素缓存起来
-                        // 再次切换省份，缓存无效，这种优化只能保证用户会一级一级选下去的情况有用
-                    // 4 组合两种优化方式
-                    //     1 只遍历用户选择元素的级别
-                    //         正序 用户选了武汉市，就根据遍历武汉市的直接子元素
-                    //         逆序 用户选了武汉市，但是接下来又选了湖南省，这样就应该去省份级别去遍历
-                            // 2 递归的时候，传入一个层级，根据层级遍历，但是进入层级也是需要遍历的啊
-                            // 3 每次只遍历一个省份？那市呢？ 让递归只对一个循环下的元素进行遍历 目前的递归会对每个省进行遍历
-                cacheData = data;
-                clearAfterSelect(_level);
-            }
+    //         if(_level < level){
+    //             // 只要要发生了反选择，cacheData就会被重置为省级，
+    //             // 应该被重置为当前级别才有缓存的作用啊
+    //                 // 1 每次缓存当前同级元素 效果： 但是后退两级重选的话，还是会检索不到数据
+    //                 // 2 选择哪个深度的就去全局data里面根据传入的深度检索数据 效果： 但是如果如果数据很深还是要遍历很多次
+    //                 // 3 当前选了湖北省，就把湖北省的直接子元素缓存起来，选了随州市，就把随州市的直接子元素缓存起来
+    //                     // 再次切换省份，缓存无效，这种优化只能保证用户会一级一级选下去的情况有用
+    //                 // 4 组合两种优化方式
+    //                 //     1 只遍历用户选择元素的级别
+    //                 //         正序 用户选了武汉市，就根据遍历武汉市的直接子元素
+    //                 //         逆序 用户选了武汉市，但是接下来又选了湖南省，这样就应该去省份级别去遍历
+    //                         // 2 递归的时候，传入一个层级，根据层级遍历，但是进入层级也是需要遍历的啊
+    //                         // 3 每次只遍历一个省份？那市呢？ 让递归只对一个循环下的元素进行遍历 目前的递归会对每个省进行遍历
+    //             cacheData = data;
+    //             clearAfterSelect(_level);
+    //         }
 
-            if(!code || !data || !data.length){return;}
+    //         if(!code || !data || !data.length){return;}
 
-            var result = null;
+    //         var result = null;
 
-            if(cacheData){
-                result = cacheData = getJsonFromData(cacheData, code, _level);
-            }else{
-                result = cacheData = getJsonFromData(data, code, _level);
-            }
+    //         if(cacheData){
+    //             result = cacheData = getJsonFromData(cacheData, code, _level);
+    //         }else{
+    //             result = cacheData = getJsonFromData(data, code, _level);
+    //         }
             
-            if(!result){return;}
-            $iAddress.append(render(result));
+    //         if(!result){return;}
+    //         $iAddress.append(render(result));
 
-            // console.log(count);
-        });
-    };
+    //         // console.log(count);
+    //     });
+    // };
 
     // $.getJSON('./pcas-code.json').then(function(data){
     //     if(data && data.length){
