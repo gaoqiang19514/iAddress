@@ -6,14 +6,77 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="description" content="">
     <meta name="keywords" content="">
+    <style>
+        .container{
+            overflow: hidden;
+            width: 500px;
+            border: 1px solid #eaeaea;
+        }
+        .item{
+            cursor: pointer;
+            text-indent: 1em;
+            height: 50px;
+            line-height: 50px;
+
+            transition: transform .3s, opacity .2s;
+        }
+        .item + .item{
+            border-top: 1px solid #eaeaea;
+        }
+        .item.moveout{
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    </style>
     <title></title>
 </head>
 <body>
 
     <div id="J_iAddress"></div>
 
+
+    
+    <div id="J_address" class="container">
+        <div class="list">
+            <div class="item">湖北省</div>
+            <div class="item">湖南省</div>
+            <div class="item">四川省</div>
+            <div class="item">江西省</div>
+            <div class="item">广东省</div>
+            <div class="item">广西省</div>
+        </div>
+    </div>
+
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
 <script>
+
+
+    $('#J_address').on('click', '.item', function(e){
+        var $item = $(this);
+        
+        $item.addClass('moveout');
+        $item.on('transitionend', function(){
+            var $this = $(this);
+            $this.off('transitionend');
+            $this.remove();
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // 1   将json数据渲染为dom结构
     // 2   给select绑定事件处理程序
@@ -120,15 +183,15 @@
         });
     };
 
-    $.getJSON('./pcas-code.json').then(function(data){
-        if(data && data.length){
-            init(data);
-            // console.log(data);
+    // $.getJSON('./pcas-code.json').then(function(data){
+    //     if(data && data.length){
+    //         init(data);
+    //         // console.log(data);
             
-        }
-    }, function(error){
-        alert('地址数据异常');
-    });
+    //     }
+    // }, function(error){
+    //     alert('地址数据异常');
+    // });
 
 </script>
 </body>
