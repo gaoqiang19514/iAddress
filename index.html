@@ -7,7 +7,8 @@
     <meta name="description" content="">
     <meta name="keywords" content="">
     <style>
-        .container{
+        .iaddress{
+            display: none;
             overflow: hidden;
             width: 500px;
             border: 1px solid #eaeaea;
@@ -38,11 +39,13 @@
 </head>
 <body>
 
-    <div id="J_iAddress"></div>
+    <!-- <div id="J_iAddress"></div> -->
 
 
+
+    <button id="J_address_trigger">button</button>    
     
-    <div id="J_address" class="container">
+    <div id="J_address" class="iaddress">
         <div class="view province active">
             <div class="item">湖北省</div>
             <div class="item">湖南省</div>
@@ -74,7 +77,12 @@
 
     var $views = $('.view');
 
+    $('#J_address_trigger').on('click', function(e){
+        $('#J_address').show();
+    });
+
     var level = 0;
+    var address = [];
     $('#J_address').on('click', '.item', function(e){
         level++;
         
@@ -82,6 +90,8 @@
         $item.addClass('moveout');
         $item.on('transitionend', function(){
             var $this = $(this);
+            address.push($this.text());
+            console.log(address);
             $this.off('transitionend');
             $this.remove();
 
