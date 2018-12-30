@@ -60,7 +60,11 @@
             margin: 0;
         }
         .address__selected-item{
-            padding: 10px;
+            color: #fff;
+            background: #ccc;
+            padding: 5px;
+            margin: 0 0 10px 10px;
+            border-radius: 2px;
         }
         .adddress__close{
         }
@@ -188,12 +192,12 @@ var app = (function(){
         jqueryMap.$scroller.css('transform', `translateX(-${left}%)`);
     };
 
-    var setSelectText = function(name){
+    var setSelectText = function(name, level){
 
         var renderNameList = function(list){
             var html = '';
             $.each(list, function(index, item){
-                html += `<li class="address__selected-item">${item}</li>`;
+                html += `<li class="address__selected-item" data-level="${level}" data-js-selectedIten>${item}</li>`;
             });
             return html;
         };
@@ -206,28 +210,32 @@ var app = (function(){
 
         pushSelectName(name);
 
-        console.log(stateMap.selectNameList);
         var html = renderNameList(stateMap.selectNameList);
         $('[data-js-selectNames]').html(html);
     };
 
+    // 清理当前level地址后面的所有
+    var cleanAfterAddress = function(level){
+        translateTo(level);
+    };
+
     var initEvents = function(){
         jqueryMap.$addressProvince.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'));
+            setSelectText($(this).data('name'), 1);
             translateTo(1);
             var code = $(this).data('code');
             loadCities(code);
         });
 
         jqueryMap.$addressCities.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'));
+            setSelectText($(this).data('name'), 2);
             translateTo(2);
             var code = $(this).data('code');
             loadAreas(code);
         });
 
         jqueryMap.$addressAreas.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'));
+            setSelectText($(this).data('name'), 3);
             translateTo(3);
             var code = $(this).data('code');
             loadStreets(code);
@@ -237,6 +245,14 @@ var app = (function(){
             setSelectText($(this).data('name'));
         });
 
+        // 切换已选内容
+        $('[data-js-selectnames]').on('click', '[data-js-selectedIten]', function(e){
+            var $this = $(this);
+            var index = $this.index();
+            cleanAfterAddress(index);
+        });
+        
+        // 关闭弹层
         $('[data-js-closeBtn]').on('click', function(e){
             $('[data-js-iAddress]').removeClass('active');
         });
