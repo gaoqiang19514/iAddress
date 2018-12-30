@@ -208,6 +208,8 @@ var app = (function(){
             }
         };
 
+        // 清理掉当前点击层级后面的地址
+        stateMap.selectNameList.splice(level, stateMap.selectNameList.length);
         pushSelectName(name);
 
         var html = renderNameList(stateMap.selectNameList);
@@ -221,28 +223,28 @@ var app = (function(){
 
     var initEvents = function(){
         jqueryMap.$addressProvince.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'), 1);
+            setSelectText($(this).data('name'), 0);
             translateTo(1);
             var code = $(this).data('code');
             loadCities(code);
         });
 
         jqueryMap.$addressCities.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'), 2);
+            setSelectText($(this).data('name'), 1);
             translateTo(2);
             var code = $(this).data('code');
             loadAreas(code);
         });
 
         jqueryMap.$addressAreas.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'), 3);
+            setSelectText($(this).data('name'), 2);
             translateTo(3);
             var code = $(this).data('code');
             loadStreets(code);
         });
 
         jqueryMap.$addressStreets.on('click', '[data-js-address]', function(e){
-            setSelectText($(this).data('name'));
+            setSelectText($(this).data('name'), 3);
         });
 
         // 切换已选内容
