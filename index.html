@@ -4,129 +4,264 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-    <title></title>
+
+    <link href="https://cdn.bootcss.com/modern-normalize/0.5.0/modern-normalize.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background: #f7f7f8;
+        }
+        .iAddress{
+            display: none;
+
+            position: absolute;
+            top: 100px;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            font-size: 12px;
+        }
+        .iAddress.active{
+            display: block;
+        }
+        .l__container{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .l__head{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .l__wrap{
+            display: flex;
+            height: 100%;
+            transition: all .3s;
+        }
+        .l__item{
+            overflow-y: auto;
+            width: 100%;
+            flex-shrink: 0;
+            background: #fff;
+            -webkit-overflow-scrolling: touch;
+        }
+        .address{
+            padding: 10px;
+        }
+        .address__name{
+            line-height: 1.7;
+        }
+        .address__selected{
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .address__selected-item{
+            padding: 10px;
+        }
+        .adddress__close{
+        }
+    </style>
+
+    <title>iAddress</title>
 </head>
 <body>
 
-    <div id="J_iAddress"></div>
+    <button data-js-openAddressBtn>open</button>
 
-    
+    <div class="iAddress" data-js-iAddress>
+        <div class="l__head">
+            <ul class="address__selected" data-js-selectNames></ul>
+            <button class="adddress__close" data-js-closeBtn>×</button>
+        </div>
+        <div class="l__container">
+            <div class="l__wrap" data-js-scroller>
+                <div class="l__item" data-js-addressProvince></div>
+                <div class="l__item" data-js-addressCities></div>
+                <div class="l__item" data-js-addressAreas></div>
+                <div class="l__item" data-js-addressStreets></div>
+            </div>
+        </div>
+    </div>
+
+    <script id="address-template" type="text/x-handlebars-template">
+        <div class="address" data-code="{{code}}" data-name="{{name}}" data-js-address>
+            <div class="address__name">{{name}}</div>
+        </div>
+    </script>
 
 <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/handlebars.js/4.0.12/handlebars.min.js"></script>
+
+<!-- util -->
+<script src="./util/index.js"></script>
+<!-- api -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="./api/index.js"></script>
+<!-- mock -->
+<script src="http://mockjs.com/dist/mock.js"></script>
+<script src="./mock/index.js"></script>
+
 <script>
 
-    // 1   将json数据渲染为dom结构
-    // 2   给select绑定事件处理程序
-    // 3   事件被触发时，执行回调，将选择的结果传递给回调
-    var level = 0, init, render, createDom, getJsonFromData,
-        clearAfterSelect,
-        $iAddress;
-    
-    var cacheData = null;
-    var count = 0;
+var app = (function(){
 
-    $iAddress = $('#J_iAddress');
+    var lg = console.log;
+    var configMap = {};
+    var stateMap = {
+        selectNameList: []
+    };
+    var jqueryMap = {};
 
-    render = function(data){
-        level++;
-        var html = `<select data-level="${level}"><option value="">请选择</option>`;
-            
-        html += data.map(function(item, index){
-            return `<option value="${ item.code }">${ item.name }</option>`;
-        }).join('');
-
-        html += `</select>`;
-
-        return html;
+    var setJqueryMap = function(){
+        jqueryMap = {
+            $scroller: $('[data-js-scroller]'),
+            $addressProvince: $('[data-js-addressProvince]'),
+            $addressCities: $('[data-js-addressCities]'),
+            $addressAreas: $('[data-js-addressAreas]'),
+            $addressStreets: $('[data-js-addressStreets]')
+        };
     };
 
-    // 做优化
-        // 比如选了湖北省 那么再选湖北省下面的省市的话，则不需要遍历其他省了
-    getJsonFromData = function(data, code){
-        count++;
-        for(var i = 0; i < data.length; i++){      
-            if(data[i].code === code){
-                return data[i].children;
-            }else{
-                if(data[i].children){
-                   var res = getJsonFromData(data[i].children, code);
-                   if(res){
-                       return res;
-                   }
-                }
-            }
-        }
+    var buildDataToHtml = (function(){
+        var source   = document.getElementById("address-template").innerHTML;
+        var template = Handlebars.compile(source);
+
+        return function(data){
+            var html = '';
+            $.each(data, function(index, item){
+                html += template(item);
+            });
+            return html;
+        };
+    })();
+
+    var loadProvince = function(){
+        Api.getProvince()
+            .then(function(res){
+                const { data } = res;
+
+                // 渲染省份
+                var html = buildDataToHtml(data);
+                jqueryMap.$addressProvince.html(html);
+            });
     };
 
-    // level参数是当前触发select元素的等级
-    clearAfterSelect = function(_level){
-        $('select').each((index, item) => {
-            if($(item).attr('data-level') > _level){
-                $(item).remove();
+    var loadCities = function(code){
+        Api.getCities(code)
+            .then(function(res){
+                const { data } = res;
+
+                // 渲染市
+                var html = buildDataToHtml(data);
+                jqueryMap.$addressCities.html(html);
+            });
+    };
+
+    var loadAreas = function(code){
+        Api.getAreas(code)
+            .then(function(res){
+                const { data } = res;
+
+                // 渲染市
+                var html = buildDataToHtml(data);
+                jqueryMap.$addressAreas.html(html);
+            });
+    };
+
+    var loadStreets = function(code){
+        Api.getStreets(code)
+            .then(function(res){
+                const { data } = res;
+
+                // 渲染市
+                var html = buildDataToHtml(data);
+                jqueryMap.$addressStreets.html(html);
+            });
+    };
+
+    var translateTo = function(index){
+        var left = index * 100;
+        jqueryMap.$scroller.css('transform', `translateX(-${left}%)`);
+    };
+
+    var setSelectText = function(name){
+
+        var renderNameList = function(list){
+            var html = '';
+            $.each(list, function(index, item){
+                html += `<li class="address__selected-item">${item}</li>`;
+            });
+            return html;
+        };
+
+        var pushSelectName = function(_name){
+            if(stateMap.selectNameList.indexOf(name) < 0){
+                stateMap.selectNameList.push(_name);
             }
+        };
+
+        pushSelectName(name);
+
+        console.log(stateMap.selectNameList);
+        var html = renderNameList(stateMap.selectNameList);
+        $('[data-js-selectNames]').html(html);
+    };
+
+    var initEvents = function(){
+        jqueryMap.$addressProvince.on('click', '[data-js-address]', function(e){
+            setSelectText($(this).data('name'));
+            translateTo(1);
+            var code = $(this).data('code');
+            loadCities(code);
         });
 
-        level = _level;
-    };
+        jqueryMap.$addressCities.on('click', '[data-js-address]', function(e){
+            setSelectText($(this).data('name'));
+            translateTo(2);
+            var code = $(this).data('code');
+            loadAreas(code);
+        });
 
-    init = function(data){
+        jqueryMap.$addressAreas.on('click', '[data-js-address]', function(e){
+            setSelectText($(this).data('name'));
+            translateTo(3);
+            var code = $(this).data('code');
+            loadStreets(code);
+        });
 
-        // 生成省份
-        $iAddress.append(render(data));
+        jqueryMap.$addressStreets.on('click', '[data-js-address]', function(e){
+            setSelectText($(this).data('name'));
+        });
 
-        $iAddress.on('change', 'select', function(e){
-            var code = e.target.value;
-            var _level = parseInt(e.target.getAttribute('data-level'));
-            
-            if(_level < level){
-                cacheData = data;
-                clearAfterSelect(_level);
-            }
-
-            if(!code || !data || !data.length){return;}
-
-            // 这里还需要做一下判断，当选择的下级有了之后，就应该清除之前选的
-
-            // 怎么判断呢？
-            //     每次生成一个select就给他加一个层级，然后每次生成前就在事件处理程序中读取当前select
-            // 的层级，如果层级有问题就remove掉
-
-            // 是否可以利用这个层级变量来优化查找？
-            //     如果当前的level是2，那么就应该在市里面去遍历
-            //     如果当前的level是3，那么就应该是区域里面去遍历
-            
-            //     应该是在当前code的子元素里面去遍历
-
-            // 难道只能做缓存，比如当前选了一个湖北省，那就把湖北省的子元素都缓存起来
-            // 下一次选的项目是湖北省的子元素的话，就在这个缓存里面去搜索，这样速度会快些
-            
-            var result = null;
-            if(cacheData){
-                result = cacheData = getJsonFromData(cacheData, code);
-            }else{
-                // 这里只缓存了选择的市列表 还可以继续优化，让每次选择只从子元素中找，不用找同级
-                    // 根据当前选择的 缓存直接下级
-                        // 比如选择了省就缓存市 选了市就缓存区 选择了区就缓存街道
-                result = cacheData = getJsonFromData(data, code);
-            }
-            if(!result){return;}
-            $iAddress.append(render(result));
-            
-
-            console.log(count);
+        $('[data-js-closeBtn]').on('click', function(e){
+            $('[data-js-iAddress]').removeClass('active');
         });
     };
 
-    $.getJSON('./pcas-code.json').then(function(data){
-        if(data && data.length){
-            init(data);
-        }
-    }, function(error){
-        alert('地址数据异常');
-    });
+    var restore = function(){
+        // translateTo(0);
+    };
 
+    var init = function(){
+        setJqueryMap();
+        initEvents();
+        loadProvince();
+
+        $('[data-js-openAddressBtn]').on('click', function(e){
+            restore();
+            $('[data-js-iAddress]').addClass('active');
+        }).click();
+    };
+
+    return { init: init };
+})();
+$(function(){
+    app.init();
+})
 </script>
 </body>
 </html>
