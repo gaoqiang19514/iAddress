@@ -50,6 +50,14 @@
         .address{
             padding: 10px;
         }
+        .address.active{
+            color: red;
+        }
+        .address.active .address__name:after{
+            content: '√';
+        }
+
+        
         .address__name{
             line-height: 1.7;
         }
@@ -77,11 +85,11 @@
     <button data-js-openAddressBtn>open</button>
 
     <div class="iAddress" data-js-iAddress>
-        <div class="l__head">
-            <ul class="address__selected" data-js-selectNames></ul>
-            <button class="adddress__close" data-js-closeBtn>×</button>
-        </div>
         <div class="l__container">
+            <div class="l__head">
+                <ul class="address__selected" data-js-selectNames></ul>
+                <button class="adddress__close" data-js-closeBtn>×</button>
+            </div>
             <div class="l__wrap" data-js-scroller>
                 <div class="l__item" data-js-addressProvince></div>
                 <div class="l__item" data-js-addressCities></div>
@@ -221,12 +229,19 @@ var app = (function(){
         translateTo(level);
     };
 
+    var highlightCurrent = function($current){
+        $current.addClass('active');
+        $current.siblings().removeClass('active');
+    };
+
     var initEvents = function(){
         jqueryMap.$addressProvince.on('click', '[data-js-address]', function(e){
             setSelectText($(this).data('name'), 0);
             translateTo(1);
             var code = $(this).data('code');
             loadCities(code);
+
+            highlightCurrent($(this));
         });
 
         jqueryMap.$addressCities.on('click', '[data-js-address]', function(e){
@@ -234,6 +249,8 @@ var app = (function(){
             translateTo(2);
             var code = $(this).data('code');
             loadAreas(code);
+
+            highlightCurrent($(this));
         });
 
         jqueryMap.$addressAreas.on('click', '[data-js-address]', function(e){
@@ -241,10 +258,14 @@ var app = (function(){
             translateTo(3);
             var code = $(this).data('code');
             loadStreets(code);
+
+            highlightCurrent($(this));
         });
 
         jqueryMap.$addressStreets.on('click', '[data-js-address]', function(e){
             setSelectText($(this).data('name'), 3);
+
+            highlightCurrent($(this));
         });
 
         // 切换已选内容
